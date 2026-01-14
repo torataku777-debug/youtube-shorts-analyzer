@@ -46,9 +46,9 @@ export default function RisingStarsSection() {
     const [loading, setLoading] = useState(true);
 
     // Filter States
-    const [maxVideoCount, setMaxVideoCount] = useState<string>("10");
-    const [minAvgViews, setMinAvgViews] = useState<string>("100000");
-    const [maxMonths, setMaxMonths] = useState<string>("3");
+    const [maxVideoCount, setMaxVideoCount] = useState<string>("1000");
+    const [minAvgViews, setMinAvgViews] = useState<string>("10000");
+    const [maxMonths, setMaxMonths] = useState<string>("24");
     const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
 
     useEffect(() => {
@@ -117,17 +117,23 @@ export default function RisingStarsSection() {
                     {channels.map((channel) => (
                         <Card key={channel.id} className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-transparent hover:border-l-pink-500">
                             <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                                <Avatar className="h-14 w-14 border-2 border-background shadow-sm">
-                                    <AvatarImage src={channel.thumbnail_url} alt={channel.title} />
-                                    <AvatarFallback>{channel.title[0]}</AvatarFallback>
-                                </Avatar>
+                                <a href={`https://www.youtube.com/channel/${channel.youtube_id}`} target="_blank" rel="noopener noreferrer">
+                                    <Avatar className="h-14 w-14 border-2 border-background shadow-sm hover:scale-105 transition-transform">
+                                        <AvatarImage src={channel.thumbnail_url} alt={channel.title} />
+                                        <AvatarFallback>{channel.title[0]}</AvatarFallback>
+                                    </Avatar>
+                                </a>
                                 <div className="space-y-1 overflow-hidden">
-                                    <CardTitle className="text-base truncate" title={channel.title}>
-                                        {channel.title}
-                                    </CardTitle>
-                                    <CardDescription className="text-xs truncate">
-                                        {channel.custom_url || "No handle"}
-                                    </CardDescription>
+                                    <a href={`https://www.youtube.com/channel/${channel.youtube_id}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                        <CardTitle className="text-base truncate" title={channel.title}>
+                                            {channel.title}
+                                        </CardTitle>
+                                    </a>
+                                    <a href={channel.custom_url ? `https://www.youtube.com/${channel.custom_url}` : `https://www.youtube.com/channel/${channel.youtube_id}`} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors block truncate">
+                                        <CardDescription className="text-xs truncate">
+                                            {channel.custom_url || "No handle"}
+                                        </CardDescription>
+                                    </a>
                                 </div>
                             </CardHeader>
                             <CardContent>
