@@ -2,7 +2,7 @@
 import { TrendFilters } from "@/components/dashboard/TrendFilters"
 import { RegionSelector } from "@/components/dashboard/RegionSelector"
 import { KidsFilter } from "@/components/dashboard/KidsFilter"
-import { VideoCard } from "@/components/dashboard/VideoCard"
+import { VideoGrid } from "@/components/dashboard/VideoGrid"
 import { supabase } from "@/lib/supabase"
 import { Suspense } from "react"
 
@@ -106,30 +106,8 @@ export default async function Home({ searchParams }: PageProps) {
           </div>
         )}
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {displayVideos.length > 0 ? (
-            displayVideos.map((video: any) => (
-              <VideoCard
-                key={video.video_id}
-                videoId={video.video_youtube_id}
-                title={video.title}
-                thumbnailUrl={video.thumbnail_url}
-                channelId={video.channel_youtube_id}
-                channelTitle={video.channel_title}
-                views={video.current_views}
-                likes={0}
-                growthViews={video.growth_views}
-                growthRate={video.growth_rate}
-                isHighRpm={video.is_high_rpm}
-                isFaceless={video.is_faceless}
-                audioInfo={video.audio_info}
-              />
-            ))
-          ) : (
-            <p className="col-span-4 text-center text-muted-foreground py-10">
-              この期間のデータはまだありません。データが蓄積されるまでお待ちください。
-            </p>
-          )}
+        <div className="mt-6">
+          <VideoGrid videos={displayVideos} />
         </div>
       </div>
     </div>
