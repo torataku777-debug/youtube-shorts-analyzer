@@ -71,7 +71,8 @@ export default async function Home({ searchParams }: PageProps) {
       growth_rate: 0,
       is_high_rpm: v.is_high_rpm,
       is_faceless: v.is_faceless,
-      audio_info: v.audio_info
+      audio_info: v.audio_info,
+      is_kids: v.is_kids
     })) || [];
   }
 

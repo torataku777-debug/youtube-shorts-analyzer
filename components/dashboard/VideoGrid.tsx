@@ -18,6 +18,7 @@ interface Video {
     is_high_rpm?: boolean;
     is_faceless?: boolean;
     audio_info?: string | null;
+    is_kids?: boolean;
 }
 
 interface VideoGridProps {
@@ -31,6 +32,7 @@ export function VideoGrid({ videos }: VideoGridProps) {
         excludedChannels: string;
         strictSensitivity: boolean;
         keywords: string;
+        showKidsContent?: boolean;
     } | null>(null);
 
     useEffect(() => {
@@ -66,6 +68,14 @@ export function VideoGrid({ videos }: VideoGridProps) {
                 return false;
             }
         }
+
+        // Exclude Kids Content if setting is OFF
+        // Note: filteredVideos defaults to showing everything. If showKidsContent is explicitly false, hide kids videos.
+        // If showKidsContent is missing (undefined/null), treat as true (show).
+        if (settings.showKidsContent === false && video.is_kids) {
+            return false;
+        }
+
         return true;
     });
 

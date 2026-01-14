@@ -21,6 +21,7 @@ interface ExpertSettings {
     strictSensitivity: boolean;
     excludedChannels: string;
     keywords: string;
+    showKidsContent: boolean;
 }
 
 export default function SettingsPage() {
@@ -30,7 +31,8 @@ export default function SettingsPage() {
         defaultMode: 'medium',
         strictSensitivity: false,
         excludedChannels: '',
-        keywords: '#shorts, #vtuber, #gaming'
+        keywords: '#shorts, #vtuber, #gaming',
+        showKidsContent: true
     });
     const [loaded, setLoaded] = useState(false);
 
@@ -67,24 +69,7 @@ export default function SettingsPage() {
             <div className="grid gap-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>トラッキング設定</CardTitle>
-                        <CardDescription>分析対象のキーワードを設定します。</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="keywords">キーワード (カンマ区切り)</Label>
-                            <Input
-                                id="keywords"
-                                value={settings.keywords}
-                                onChange={(e) => setSettings({ ...settings, keywords: e.target.value })}
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>玄人向け設定 (Expert Settings)</CardTitle>
+                        <CardTitle>表示設定</CardTitle>
                         <CardDescription>初期表示やフィルタリングの挙動をカスタマイズします。</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -116,13 +101,27 @@ export default function SettingsPage() {
                                         <SelectValue placeholder="Select mode" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="large">大 (6列)</SelectItem>
-                                        <SelectItem value="medium">中 (8列)</SelectItem>
-                                        <SelectItem value="small">小 (10列)</SelectItem>
+                                        <SelectItem value="large">大</SelectItem>
+                                        <SelectItem value="medium">中</SelectItem>
+                                        <SelectItem value="small">小</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <p className="text-xs text-muted-foreground">一覧のグリッド表示サイズを固定します。</p>
                             </div>
+                        </div>
+
+                        <div className="flex items-center justify-between border-t pt-4">
+                            <div className="space-y-0.5">
+                                <Label>子供向け動画を表示する</Label>
+                                <p className="text-xs text-muted-foreground">
+                                    ONにすると子供向け（Made for Kids）の動画も一覧に含めます。<br />
+                                    OFFにすると除外されます。
+                                </p>
+                            </div>
+                            <Switch
+                                checked={settings.showKidsContent}
+                                onCheckedChange={(checked) => setSettings({ ...settings, showKidsContent: checked })}
+                            />
                         </div>
 
                         <div className="flex items-center justify-between border-t pt-4">
@@ -164,6 +163,23 @@ export default function SettingsPage() {
                                     保存しました
                                 </span>
                             )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>トラッキング設定</CardTitle>
+                        <CardDescription>分析対象のキーワードを設定します。</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="keywords">キーワード (カンマ区切り)</Label>
+                            <Input
+                                id="keywords"
+                                value={settings.keywords}
+                                onChange={(e) => setSettings({ ...settings, keywords: e.target.value })}
+                            />
                         </div>
                     </CardContent>
                 </Card>

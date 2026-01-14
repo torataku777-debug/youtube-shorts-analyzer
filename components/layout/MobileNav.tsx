@@ -10,10 +10,10 @@ export function MobileNav() {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t h-16 md:hidden flex items-center justify-around px-4 pb-safe">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t h-16 md:hidden grid grid-cols-3 px-0 pb-safe">
             <Link
                 href="/"
-                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${isActive('/') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                className={`flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${isActive('/') ? 'text-blue-500' : 'text-muted-foreground hover:text-foreground'
                     }`}
             >
                 <LayoutDashboard className="w-5 h-5" />
@@ -21,7 +21,7 @@ export function MobileNav() {
             </Link>
             <Link
                 href="/trends"
-                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${isActive('/trends') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                className={`flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${isActive('/trends') ? 'text-red-500' : 'text-muted-foreground hover:text-foreground'
                     }`}
             >
                 <TrendingUp className="w-5 h-5" />
@@ -29,7 +29,7 @@ export function MobileNav() {
             </Link>
             <Link
                 href="/settings"
-                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                className={`flex flex-col items-center justify-center gap-1 w-full h-full transition-colors ${isActive('/settings') ? 'text-zinc-500' : 'text-muted-foreground hover:text-foreground'
                     }`}
             >
                 <Settings className="w-5 h-5" />
