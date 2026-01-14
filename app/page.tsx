@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase"
 import { Suspense } from "react"
 import { Settings } from "lucide-react"
 import Link from "next/link"
+import { DataRefresher } from "@/components/dashboard/DataRefresher";
 
 // Disable caching to see updates
 export const revalidate = 0;
@@ -109,6 +110,8 @@ export default async function Home({ searchParams }: PageProps) {
             <TrendFilters />
           </Suspense>
         </div>
+
+        <DataRefresher hasData={displayVideos.length > 0} />
 
         {error && (
           <div className="bg-yellow-500/10 text-yellow-500 p-4 rounded-md text-sm border border-yellow-500/20">
