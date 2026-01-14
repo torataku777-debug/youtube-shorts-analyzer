@@ -58,23 +58,35 @@ export async function fetchTrendingShorts(options: FetchOptions, targetCount = 2
 
         // Strategy 1: Real Trends (mostPopular)
         console.log(`[${options.regionCode}] Strategy 1: Scanning Most Popular...`);
-        for (let i = 0; i < 3; i++) {
+        let pageToken: string | undefined = undefined;
+
+        // Loop until we reach targetCount (or close to it/run out of pages)
+        // We use a safe upper bound (e.g. 10 pages) to prevent infinite loops
+        for (let i = 0; i < 10; i++) {
+            if (shorts.length >= targetCount) break;
+
             const response = await youtube.videos.list({
                 key: YOUTUBE_API_KEY,
                 part: ['snippet', 'statistics', 'contentDetails', 'status'], // Added 'status'
                 chart: 'mostPopular',
                 regionCode: options.regionCode,
-                maxResults: 50
+                maxResults: 50,
+                pageToken: pageToken // Pass the token!
             });
+
             const items = response.data.items || [];
             const pageShorts = items.filter(item => {
                 const d = parseDuration(item.contentDetails?.duration || '');
                 return d > 0 && d <= 61;
             });
+
+            console.log(`[${options.regionCode}] Page ${i + 1}: Found ${pageShorts.length} shorts`);
             shorts = [...shorts, ...pageShorts];
-            if (!response.data.nextPageToken) break;
+
+            pageToken = response.data.nextPageToken || undefined;
+            if (!pageToken) break;
         }
-        console.log(`[${options.regionCode}] Trends strategy found: ${shorts.length}`);
+        console.log(`[${options.regionCode}] Trends strategy found total: ${shorts.length}`);
 
         // Strategy 2: Search Backfill
         if (shorts.length < targetCount) {

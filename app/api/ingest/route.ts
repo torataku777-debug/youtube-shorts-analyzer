@@ -104,6 +104,7 @@ async function saveToDatabase(videoStats: any[], regionCode: string) {
 export async function GET() {
     try {
         console.log('Starting Multi-Region Deep Ingest...');
+        const TARGET_COUNT = 200;
 
         const regions = [
             {
@@ -121,14 +122,14 @@ export async function GET() {
         let totalVideos = 0;
 
         for (const region of regions) {
-            console.log(`Processing Region: ${region.code}`);
+            console.log(`Processing Region: ${region.code} with target ${TARGET_COUNT}`);
 
             // 1. Initial Ingest (Trends + Manual Keywords)
             const initialVideos = await fetchTrendingShorts({
                 regionCode: region.code,
                 relevanceLanguage: region.lang,
                 keywords: region.keywords
-            }, 50);
+            }, TARGET_COUNT);
 
             const savedCount = await saveToDatabase(initialVideos, region.code);
             totalVideos += savedCount;
