@@ -198,6 +198,7 @@ export default function RisingStarsSection() {
                                 <SelectItem value="100">100本以下</SelectItem>
                                 <SelectItem value="200">200本以下</SelectItem>
                                 <SelectItem value="300">300本以下</SelectItem>
+                                <SelectItem value="600">600本以下</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -227,6 +228,7 @@ export default function RisingStarsSection() {
                                 <SelectItem value="3">3ヶ月以内</SelectItem>
                                 <SelectItem value="6">6ヶ月以内</SelectItem>
                                 <SelectItem value="12">12ヶ月以内</SelectItem>
+                                <SelectItem value="24">2年以内</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
