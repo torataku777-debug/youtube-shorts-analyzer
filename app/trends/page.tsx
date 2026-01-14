@@ -1,4 +1,5 @@
 import RisingStarsSection from './rising-stars-section';
+import { TrendGenres } from '@/components/trends/TrendGenres';
 
 // Disable caching
 export const revalidate = 0;
@@ -15,6 +16,7 @@ export default function TrendsPage() {
                 </p>
             </header>
 
+            <TrendGenres />
             <RisingStarsSection />
         </div>
     )
