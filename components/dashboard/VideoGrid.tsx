@@ -25,7 +25,7 @@ interface VideoGridProps {
 }
 
 export function VideoGrid({ videos }: VideoGridProps) {
-    const [isCompact, setIsCompact] = useState(false);
+    const [gridSize, setGridSize] = useState<'large' | 'medium' | 'small'>('medium');
     const [settings, setSettings] = useState<{
         defaultMode: string;
         excludedChannels: string;
@@ -39,8 +39,13 @@ export function VideoGrid({ videos }: VideoGridProps) {
             try {
                 const parsed = JSON.parse(saved);
                 setSettings(parsed);
+                // Map legacy or new settings
                 if (parsed.defaultMode === 'compact') {
-                    setIsCompact(true);
+                    setGridSize('small'); // specific user preference for density
+                } else if (parsed.defaultMode === 'standard') {
+                    setGridSize('medium');
+                } else if (['large', 'medium', 'small'].includes(parsed.defaultMode)) {
+                    setGridSize(parsed.defaultMode as any);
                 }
             } catch (e) {
                 console.error(e);
@@ -64,35 +69,53 @@ export function VideoGrid({ videos }: VideoGridProps) {
         return true;
     });
 
+    const getGridClasses = () => {
+        switch (gridSize) {
+            case 'large': // 6 cols
+                return 'grid-cols-2 md:grid-cols-4 xl:grid-cols-6';
+            case 'small': // 10 cols
+                return 'grid-cols-3 md:grid-cols-6 xl:grid-cols-10';
+            case 'medium': // 8 cols (Default)
+            default:
+                return 'grid-cols-2 md:grid-cols-4 xl:grid-cols-8';
+        }
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex justify-end">
                 <div className="flex items-center bg-muted rounded-lg p-1 border">
                     <Button
-                        variant={!isCompact ? "secondary" : "ghost"}
+                        variant={gridSize === 'large' ? "secondary" : "ghost"}
                         size="sm"
-                        onClick={() => setIsCompact(false)}
-                        className="h-8 w-24 gap-2"
+                        onClick={() => setGridSize('large')}
+                        className="h-8 gap-2 px-3"
                     >
                         <LayoutGrid className="w-4 h-4" />
-                        標準
+                        大
                     </Button>
                     <Button
-                        variant={isCompact ? "secondary" : "ghost"}
+                        variant={gridSize === 'medium' ? "secondary" : "ghost"}
                         size="sm"
-                        onClick={() => setIsCompact(true)}
-                        className="h-8 w-24 gap-2"
+                        onClick={() => setGridSize('medium')}
+                        className="h-8 gap-2 px-3"
+                    >
+                        <LayoutGrid className="w-4 h-4" />
+                        中
+                    </Button>
+                    <Button
+                        variant={gridSize === 'small' ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => setGridSize('small')}
+                        className="h-8 gap-2 px-3"
                     >
                         <Grip className="w-4 h-4" />
-                        極小
+                        小
                     </Button>
                 </div>
             </div>
 
-            <div className={`grid gap-4 ${isCompact
-                ? 'grid-cols-2 md:grid-cols-4 xl:grid-cols-8'
-                : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-                }`}>
+            <div className={`grid gap-4 ${getGridClasses()}`}>
                 {filteredVideos.length > 0 ? (
                     filteredVideos.map((video) => {
                         // Strict Sensitivity Logic
@@ -121,7 +144,7 @@ export function VideoGrid({ videos }: VideoGridProps) {
                                 isHighRpm={showHighRpm}
                                 isFaceless={video.is_faceless}
                                 audioInfo={video.audio_info}
-                                isCompact={isCompact}
+                                size={gridSize}
                             />
                         );
                     })

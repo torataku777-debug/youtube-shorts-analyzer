@@ -116,8 +116,9 @@ export default function SettingsPage() {
                                         <SelectValue placeholder="Select mode" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="standard">標準 (4列)</SelectItem>
-                                        <SelectItem value="compact">極小 (8列)</SelectItem>
+                                        <SelectItem value="large">大 (6列)</SelectItem>
+                                        <SelectItem value="medium">中 (8列)</SelectItem>
+                                        <SelectItem value="small">小 (10列)</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <p className="text-xs text-muted-foreground">一覧のグリッド表示サイズを固定します。</p>
