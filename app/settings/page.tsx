@@ -35,19 +35,20 @@ export default function SettingsPage() {
                             <Label htmlFor="keywords">キーワード</Label>
                             <Input id="keywords" defaultValue="#shorts, #vtuber, #gaming" />
                         </div>
-                        <Button
-                            onClick={handleSave}
-                            className={`transition-all duration-200 ${isSaved ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                        >
-                            {isSaved ? (
-                                <>
-                                    <Check className="mr-2 h-4 w-4" />
-                                    保存完了
-                                </>
-                            ) : (
-                                '変更を保存'
+                        <div className="flex items-center gap-4">
+                            <Button
+                                onClick={handleSave}
+                                className="w-32"
+                            >
+                                変更を保存
+                            </Button>
+                            {isSaved && (
+                                <span className="text-green-600 flex items-center gap-2 text-sm font-medium animate-in fade-in slide-in-from-left-2">
+                                    <Check className="h-4 w-4" />
+                                    保存しました
+                                </span>
                             )}
-                        </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
