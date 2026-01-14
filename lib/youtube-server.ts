@@ -65,7 +65,7 @@ export async function fetchTrendingShorts(options: FetchOptions, targetCount = 2
         for (let i = 0; i < 10; i++) {
             if (shorts.length >= targetCount) break;
 
-            const response = await youtube.videos.list({
+            const response: any = await youtube.videos.list({
                 key: YOUTUBE_API_KEY,
                 part: ['snippet', 'statistics', 'contentDetails', 'status'], // Added 'status'
                 chart: 'mostPopular',
