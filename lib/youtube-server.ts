@@ -75,7 +75,7 @@ export async function fetchTrendingShorts(options: FetchOptions, targetCount = 2
             });
 
             const items = response.data.items || [];
-            const pageShorts = items.filter(item => {
+            const pageShorts = items.filter((item: any) => {
                 const d = parseDuration(item.contentDetails?.duration || '');
                 return d > 0 && d <= 61;
             });
@@ -123,7 +123,7 @@ export async function fetchTrendingShorts(options: FetchOptions, targetCount = 2
                     });
 
                     const items = details.data.items || [];
-                    const filtered = items.filter(item => {
+                    const filtered = items.filter((item: any) => {
                         const d = parseDuration(item.contentDetails?.duration || '');
                         if (d <= 0 || d > 61) return false;
 
