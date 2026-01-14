@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, RefreshCw } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface DataRefresherProps {
     hasData: boolean;
@@ -45,12 +44,14 @@ export function DataRefresher({ hasData }: DataRefresherProps) {
     if (!isRefreshing) return null;
 
     return (
-        <Alert className="mb-6 bg-blue-500/10 border-blue-500/50 text-blue-500">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <AlertTitle>システム更新</AlertTitle>
-            <AlertDescription>
-                {status}
-            </AlertDescription>
-        </Alert>
+        <div className="mb-6 bg-blue-500/10 border border-blue-500/50 text-blue-500 p-4 rounded-lg flex items-start gap-3">
+            <Loader2 className="h-4 w-4 mt-1 animate-spin shrink-0" />
+            <div>
+                <h5 className="font-medium leading-none tracking-tight mb-1">システム更新</h5>
+                <div className="text-sm opacity-90">
+                    {status}
+                </div>
+            </div>
+        </div>
     );
 }
