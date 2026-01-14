@@ -43,7 +43,11 @@ export default async function Home({ searchParams }: PageProps) {
     // Fallback
     let query = supabase
       .from('videos')
-      .select(`*, daily_metrics(view_count, like_count)`)
+      .select(`
+        *,
+        daily_metrics(view_count, like_count),
+        channels(title, youtube_id)
+      `)
       .eq('region', region)
       .limit(20);
 
@@ -55,11 +59,17 @@ export default async function Home({ searchParams }: PageProps) {
 
     displayVideos = latestVideos?.map((v: any) => ({
       video_id: v.id,
+      video_youtube_id: v.youtube_id,
       title: v.title,
       thumbnail_url: v.thumbnail_url,
+      channel_title: v.channels?.title,
+      channel_youtube_id: v.channels?.youtube_id,
       current_views: v.daily_metrics?.[0]?.view_count || 0,
       growth_views: 0,
-      growth_rate: 0
+      growth_rate: 0,
+      is_high_rpm: v.is_high_rpm,
+      is_faceless: v.is_faceless,
+      audio_info: v.audio_info
     })) || [];
   }
 
@@ -92,7 +102,7 @@ export default async function Home({ searchParams }: PageProps) {
 
         {error && (
           <div className="bg-yellow-500/10 text-yellow-500 p-4 rounded-md text-sm border border-yellow-500/20">
-            Note: 成長率計算用の関数(get_trending_shorts)が更新されていません。migration_kids.sqlを実行してください。
+            Note: 成長率計算用の関数(get_trending_shorts)が更新されていません。migration_rpm_faceless.sqlを実行してください。
           </div>
         )}
 
@@ -101,12 +111,18 @@ export default async function Home({ searchParams }: PageProps) {
             displayVideos.map((video: any) => (
               <VideoCard
                 key={video.video_id}
+                videoId={video.video_youtube_id}
                 title={video.title}
                 thumbnailUrl={video.thumbnail_url}
+                channelId={video.channel_youtube_id}
+                channelTitle={video.channel_title}
                 views={video.current_views}
                 likes={0}
                 growthViews={video.growth_views}
                 growthRate={video.growth_rate}
+                isHighRpm={video.is_high_rpm}
+                isFaceless={video.is_faceless}
+                audioInfo={video.audio_info}
               />
             ))
           ) : (

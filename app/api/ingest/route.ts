@@ -38,17 +38,44 @@ async function saveToDatabase(videoStats: any[], regionCode: string) {
 
     const channelMap = new Map(storedChannels?.map(c => [c.youtube_id, c.id]));
 
-    const videosData = videoStats.map((v: any) => ({
-        youtube_id: v.id,
-        channel_id: channelMap.get(v.snippet.channelId),
-        title: v.snippet.title,
-        description: v.snippet.description,
-        published_at: v.snippet.publishedAt,
-        thumbnail_url: v.snippet.thumbnails.high?.url || v.snippet.thumbnails.default.url,
-        duration: v.contentDetails.duration,
-        region: regionCode,
-        is_kids: v.is_kids_computed
-    })).filter(v => v.channel_id);
+    const videosData = videoStats.map((v: any) => {
+        const title = v.snippet.title || '';
+        const desc = v.snippet.description || '';
+        const combinedText = (title + ' ' + desc).toLowerCase();
+
+        // 1. High RPM Logic
+        // Category 27 = Education, 28 = Science & Technology
+        const isCategoryHighRpm = ['27', '28'].includes(v.snippet.categoryId);
+        const hasHighRpmKeywords = ['節約', '金融', 'ビジネス', 'ガジェット', 'money', 'finance', 'business', 'invest', 'stock'].some(k => combinedText.includes(k.toLowerCase()));
+        const isHighRpm = isCategoryHighRpm || hasHighRpmKeywords;
+
+        // 2. Faceless Logic
+        const hasFacelessKeywords = ['ai', 'ゆっくり', '解説', '素材', '切り抜き', 'faceless', 'voiceover', 'animation'].some(k => combinedText.includes(k.toLowerCase()));
+        const isFaceless = hasFacelessKeywords;
+
+        // 3. Audio Info Extraction
+        // Heuristic: Look for "Music in this video" or lines starting with "Music:" or "Song:"
+        let audioInfo = null;
+        const musicMatch = desc.match(/(?:Music in this video|Music|Song|Track|Soundtrack)[:\s]+([^\n]+)/i);
+        if (musicMatch && musicMatch[1]) {
+            audioInfo = musicMatch[1].trim();
+        }
+
+        return {
+            youtube_id: v.id,
+            channel_id: channelMap.get(v.snippet.channelId),
+            title: v.snippet.title,
+            description: v.snippet.description,
+            published_at: v.snippet.publishedAt,
+            thumbnail_url: v.snippet.thumbnails.high?.url || v.snippet.thumbnails.default.url,
+            duration: v.contentDetails.duration,
+            region: regionCode,
+            is_kids: v.is_kids_computed,
+            is_high_rpm: isHighRpm,
+            is_faceless: isFaceless,
+            audio_info: audioInfo
+        };
+    }).filter(v => v.channel_id);
 
     const { data: storedVideos, error: videoError } = await supabase
         .from('videos')
