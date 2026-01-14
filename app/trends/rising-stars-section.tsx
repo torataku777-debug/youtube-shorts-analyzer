@@ -200,6 +200,8 @@ export default function RisingStarsSection() {
                                 <SelectItem value="200">200本以下</SelectItem>
                                 <SelectItem value="300">300本以下</SelectItem>
                                 <SelectItem value="600">600本以下</SelectItem>
+                                <SelectItem value="800">800本以下</SelectItem>
+                                <SelectItem value="1000">1000本以下</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
