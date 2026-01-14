@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import NextTopLoader from "nextjs-toploader";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 const geistSans = Geist({
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex bg-background min-h-screen`}
       >
+        <NextTopLoader color="#2563eb" showSpinner={false} />
         <Sidebar />
         <main className="flex-1 p-8 ml-0">
           {children}
