@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { VideoCard } from "@/components/dashboard/VideoCard";
 import { LayoutGrid, Grip } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,43 @@ interface VideoGridProps {
 
 export function VideoGrid({ videos }: VideoGridProps) {
     const [isCompact, setIsCompact] = useState(false);
+    const [settings, setSettings] = useState<{
+        defaultMode: string;
+        excludedChannels: string;
+        strictSensitivity: boolean;
+        keywords: string;
+    } | null>(null);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('shorts_expert_settings');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                setSettings(parsed);
+                if (parsed.defaultMode === 'compact') {
+                    setIsCompact(true);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }, []);
+
+    const filteredVideos = videos.filter(video => {
+        if (!settings) return true;
+
+        // Exclude channels
+        if (settings.excludedChannels) {
+            const excluded = settings.excludedChannels.split('\n').map(s => s.trim()).filter(Boolean);
+            if (excluded.some(ex =>
+                video.channel_title?.includes(ex) ||
+                video.channel_youtube_id === ex
+            )) {
+                return false;
+            }
+        }
+        return true;
+    });
 
     return (
         <div className="space-y-4">
@@ -53,28 +90,41 @@ export function VideoGrid({ videos }: VideoGridProps) {
             </div>
 
             <div className={`grid gap-4 ${isCompact
-                    ? 'grid-cols-2 md:grid-cols-4 xl:grid-cols-8'
-                    : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                ? 'grid-cols-2 md:grid-cols-4 xl:grid-cols-8'
+                : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
                 }`}>
-                {videos.length > 0 ? (
-                    videos.map((video) => (
-                        <VideoCard
-                            key={video.video_id}
-                            videoId={video.video_youtube_id}
-                            title={video.title}
-                            thumbnailUrl={video.thumbnail_url}
-                            channelId={video.channel_youtube_id}
-                            channelTitle={video.channel_title}
-                            views={video.current_views}
-                            likes={0}
-                            growthViews={video.growth_views}
-                            growthRate={video.growth_rate}
-                            isHighRpm={video.is_high_rpm}
-                            isFaceless={video.is_faceless}
-                            audioInfo={video.audio_info}
-                            isCompact={isCompact}
-                        />
-                    ))
+                {filteredVideos.length > 0 ? (
+                    filteredVideos.map((video) => {
+                        // Strict Sensitivity Logic
+                        let showHighRpm = video.is_high_rpm;
+                        if (settings?.strictSensitivity && video.is_high_rpm) {
+                            // If strict mode is ON, re-verify with keywords
+                            const keywords = settings.keywords.split(',').map(s => s.trim().replace(/^#/, '')).filter(Boolean);
+                            const titleLower = video.title.toLowerCase();
+                            // Check if any keyword matches
+                            const hasMatch = keywords.some(k => titleLower.includes(k.toLowerCase()));
+                            if (!hasMatch) showHighRpm = false;
+                        }
+
+                        return (
+                            <VideoCard
+                                key={video.video_id}
+                                videoId={video.video_youtube_id}
+                                title={video.title}
+                                thumbnailUrl={video.thumbnail_url}
+                                channelId={video.channel_youtube_id}
+                                channelTitle={video.channel_title}
+                                views={video.current_views}
+                                likes={0}
+                                growthViews={video.growth_views}
+                                growthRate={video.growth_rate}
+                                isHighRpm={showHighRpm}
+                                isFaceless={video.is_faceless}
+                                audioInfo={video.audio_info}
+                                isCompact={isCompact}
+                            />
+                        );
+                    })
                 ) : (
                     <p className="col-span-4 text-center text-muted-foreground py-10">
                         この期間のデータはまだありません。データが蓄積されるまでお待ちください。
