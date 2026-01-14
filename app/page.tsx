@@ -5,6 +5,8 @@ import { KidsFilter } from "@/components/dashboard/KidsFilter"
 import { VideoGrid } from "@/components/dashboard/VideoGrid"
 import { supabase } from "@/lib/supabase"
 import { Suspense } from "react"
+import { Settings } from "lucide-react"
+import Link from "next/link"
 
 // Disable caching to see updates
 export const revalidate = 0;
@@ -84,9 +86,14 @@ export default async function Home({ searchParams }: PageProps) {
             </p>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <Suspense>
-              <KidsFilter />
-            </Suspense>
+            <Link href="/settings" className="md:hidden p-2 text-muted-foreground hover:text-foreground">
+              <Settings className="w-5 h-5" />
+            </Link>
+            <div className="hidden md:block">
+              <Suspense>
+                <KidsFilter />
+              </Suspense>
+            </div>
             <Suspense>
               <RegionSelector />
             </Suspense>

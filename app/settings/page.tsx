@@ -27,7 +27,7 @@ export default function SettingsPage() {
     const [isSaved, setIsSaved] = useState(false);
     const [settings, setSettings] = useState<ExpertSettings>({
         defaultRegion: 'JP',
-        defaultMode: 'standard',
+        defaultMode: 'medium',
         strictSensitivity: false,
         excludedChannels: '',
         keywords: '#shorts, #vtuber, #gaming'

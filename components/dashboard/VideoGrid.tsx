@@ -83,7 +83,7 @@ export function VideoGrid({ videos }: VideoGridProps) {
 
     return (
         <div className="space-y-4">
-            <div className="sticky top-[88px] z-20 flex justify-end pointer-events-none">
+            <div className="hidden md:flex sticky top-[88px] z-20 justify-end pointer-events-none">
                 <div className="flex items-center bg-muted/80 backdrop-blur rounded-lg p-1 border shadow-sm pointer-events-auto">
                     <Button
                         variant={gridSize === 'large' ? "secondary" : "ghost"}

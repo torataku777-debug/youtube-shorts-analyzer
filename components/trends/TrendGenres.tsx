@@ -49,7 +49,10 @@ export function TrendGenres() {
                                 <div className="space-y-1 w-full">
                                     <div className="flex items-center justify-between">
                                         <h4 className="font-semibold text-sm">{genre.name}</h4>
-                                        <span className="text-xs text-muted-foreground font-mono">{genre.score}%</span>
+                                        <span className="text-xs text-muted-foreground font-mono">
+                                            {genre.score}%
+                                            <span className="text-[10px] text-muted-foreground ml-1">急上昇</span>
+                                        </span>
                                     </div>
                                     <div className="flex flex-wrap gap-1">
                                         {genre.tags.map(tag => (
@@ -92,7 +95,10 @@ export function TrendGenres() {
                                 <div className="space-y-1 w-full">
                                     <div className="flex items-center justify-between">
                                         <h4 className="font-semibold text-sm">{genre.name}</h4>
-                                        <span className="text-xs text-muted-foreground font-mono">{genre.score}%</span>
+                                        <span className="text-xs text-muted-foreground font-mono">
+                                            {genre.score}%
+                                            <span className="text-[10px] text-muted-foreground ml-1">Trending</span>
+                                        </span>
                                     </div>
                                     <div className="flex flex-wrap gap-1">
                                         {genre.tags.map(tag => (

@@ -139,7 +139,7 @@ export default function RisingStarsSection() {
                             <CardContent>
                                 <div className="grid grid-cols-2 gap-4 text-sm mt-2">
                                     <div className="space-y-1">
-                                        <p className="text-muted-foreground text-xs">平均再生数</p>
+                                        <p className="text-muted-foreground text-xs">平均再生数（直近30日）</p>
                                         <p className="font-bold text-lg">
                                             {formatCompactNumber(Math.round(channel.view_count / channel.video_count))}
                                         </p>
