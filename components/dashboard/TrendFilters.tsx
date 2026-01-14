@@ -19,8 +19,8 @@ export function TrendFilters() {
         <Tabs defaultValue={currentPeriod} onValueChange={handleValueChange} className="w-[400px]">
             <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="24h">24時間</TabsTrigger>
-                <TabsTrigger value="7d">7日間</TabsTrigger>
-                <TabsTrigger value="30d">30日間</TabsTrigger>
+                <TabsTrigger value="3d">3日間</TabsTrigger>
+                <TabsTrigger value="7d">1週間</TabsTrigger>
             </TabsList>
         </Tabs>
     )

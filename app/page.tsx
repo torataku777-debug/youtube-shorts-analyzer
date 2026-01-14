@@ -22,8 +22,8 @@ export default async function Home({ searchParams }: PageProps) {
   const hideKids = resolvedParams?.hide_kids === 'true';
 
   let hours = 24;
-  if (period === '7d') hours = 24 * 7;
-  if (period === '30d') hours = 24 * 30;
+  if (period === '3d') hours = 72;
+  if (period === '7d') hours = 168;
 
   console.log(`Fetching trending shorts for period: ${hours}h, region: ${region}, hide_kids: ${hideKids}`);
 
