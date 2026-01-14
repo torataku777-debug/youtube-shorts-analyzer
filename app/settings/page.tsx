@@ -1,11 +1,20 @@
+'use client';
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Check } from "lucide-react";
 
 export default function SettingsPage() {
+    const [isSaved, setIsSaved] = useState(false);
+
+    const handleSave = () => {
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+    };
+
     return (
         <div className="space-y-8">
             <header>
@@ -26,30 +35,19 @@ export default function SettingsPage() {
                             <Label htmlFor="keywords">キーワード</Label>
                             <Input id="keywords" defaultValue="#shorts, #vtuber, #gaming" />
                         </div>
-                        <Button>変更を保存</Button>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>通知設定</CardTitle>
-                        <CardDescription>動画が急上昇した際に通知を受け取ります。</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                                <Label>メール通知</Label>
-                                <p className="text-sm text-muted-foreground">毎日の分析レポートを受け取る。</p>
-                            </div>
-                            <Switch />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                                <Label>Slack連携</Label>
-                                <p className="text-sm text-muted-foreground">成長率が50%を超えた場合に#generalに通知する。</p>
-                            </div>
-                            <Switch disabled />
-                        </div>
+                        <Button
+                            onClick={handleSave}
+                            className={`transition-all duration-200 ${isSaved ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                        >
+                            {isSaved ? (
+                                <>
+                                    <Check className="mr-2 h-4 w-4" />
+                                    保存完了
+                                </>
+                            ) : (
+                                '変更を保存'
+                            )}
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
