@@ -75,22 +75,24 @@ export default async function Home({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">ダッシュボード</h2>
-          <p className="text-muted-foreground mt-1">
-            {region === 'JP' ? '日本' : 'アメリカ'}で急上昇中のYouTubeショートを分析
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Suspense>
-            <KidsFilter />
-          </Suspense>
-          <Suspense>
-            <RegionSelector />
-          </Suspense>
-        </div>
-      </header>
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 -mx-8 px-8 border-b mb-6">
+        <header className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">ダッシュボード</h2>
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">
+              {region === 'JP' ? '日本' : 'アメリカ'}で急上昇中のYouTubeショート
+            </p>
+          </div>
+          <div className="flex items-center gap-2 md:gap-4">
+            <Suspense>
+              <KidsFilter />
+            </Suspense>
+            <Suspense>
+              <RegionSelector />
+            </Suspense>
+          </div>
+        </header>
+      </div>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">

@@ -4,7 +4,7 @@ import { LayoutDashboard, TrendingUp, Settings } from "lucide-react"
 
 export function Sidebar() {
     return (
-        <div className="h-screen w-64 border-r bg-background p-4 flex flex-col">
+        <div className="hidden md:flex h-screen w-64 border-r bg-background p-4 flex-col fixed left-0 top-0 bottom-0 z-40">
             <div className="mb-8">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
                     ShortsTrend JP

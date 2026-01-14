@@ -71,11 +71,11 @@ export function VideoGrid({ videos }: VideoGridProps) {
 
     const getGridClasses = () => {
         switch (gridSize) {
-            case 'large': // 6 cols
-                return 'grid-cols-2 md:grid-cols-4 xl:grid-cols-6';
-            case 'small': // 10 cols
+            case 'large': // Mobile: 1 col, PC: 6 cols
+                return 'grid-cols-1 md:grid-cols-4 xl:grid-cols-6';
+            case 'small': // Mobile: 3 cols, PC: 10 cols
                 return 'grid-cols-3 md:grid-cols-6 xl:grid-cols-10';
-            case 'medium': // 8 cols (Default)
+            case 'medium': // Mobile: 2 cols, PC: 8 cols (Default)
             default:
                 return 'grid-cols-2 md:grid-cols-4 xl:grid-cols-8';
         }
@@ -83,8 +83,8 @@ export function VideoGrid({ videos }: VideoGridProps) {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-end">
-                <div className="flex items-center bg-muted rounded-lg p-1 border">
+            <div className="sticky top-[88px] z-20 flex justify-end pointer-events-none">
+                <div className="flex items-center bg-muted/80 backdrop-blur rounded-lg p-1 border shadow-sm pointer-events-auto">
                     <Button
                         variant={gridSize === 'large' ? "secondary" : "ghost"}
                         size="sm"

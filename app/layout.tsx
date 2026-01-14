@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { MobileNav } from "@/components/layout/MobileNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,8 @@ export default function RootLayout({
       >
         <NextTopLoader color="#2563eb" showSpinner={false} />
         <Sidebar />
-        <main className="flex-1 p-8 ml-0">
+        <MobileNav />
+        <main className="flex-1 p-4 md:p-8 ml-0 md:ml-64 pb-24 md:pb-8 w-full">
           {children}
         </main>
       </body>
