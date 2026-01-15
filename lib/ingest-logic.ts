@@ -165,16 +165,14 @@ export async function runIngestProcess() {
         }
     }
 
-}
+    // 4. Cleanup: Delete videos older than 7 days to keep DB healthy and relevance strict
+    console.log('Cleaning up old videos...');
+    const { error: cleanupError } = await supabase
+        .from('videos')
+        .delete()
+        .lt('published_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
-// 4. Cleanup: Delete videos older than 7 days to keep DB healthy and relevance strict
-console.log('Cleaning up old videos...');
-const { error: cleanupError } = await supabase
-    .from('videos')
-    .delete()
-    .lt('published_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+    if (cleanupError) console.error('Cleanup Error:', cleanupError);
 
-if (cleanupError) console.error('Cleanup Error:', cleanupError);
-
-return { success: true, totalProcessed: totalVideos };
+    return { success: true, totalProcessed: totalVideos };
 }
