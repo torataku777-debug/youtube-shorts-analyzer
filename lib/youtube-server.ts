@@ -52,50 +52,55 @@ interface FetchOptions {
     keywords: string[];
 }
 
-export async function fetchTrendingShorts(options: FetchOptions, targetCount = 20) {
+export async function fetchTrendingShorts(options: FetchOptions & { forceSearch?: boolean }, targetCount = 20) {
     try {
         let shorts: any[] = [];
+        let fetchedDataCount = 0;
 
         // Strategy 1: Real Trends (mostPopular)
-        console.log(`[${options.regionCode}] Strategy 1: Scanning Most Popular...`);
-        let pageToken: string | undefined = undefined;
+        // Skip if forceSearch is true
+        if (!options.forceSearch) {
+            console.log(`[${options.regionCode}] Strategy 1: Scanning Most Popular...`);
+            let pageToken: string | undefined = undefined;
 
-        // Loop until we reach targetCount (or close to it/run out of pages)
-        // We use a safe upper bound (e.g. 10 pages) to prevent infinite loops
-        for (let i = 0; i < 10; i++) {
-            if (shorts.length >= targetCount) break;
+            for (let i = 0; i < 10; i++) {
+                if (shorts.length >= targetCount) break;
 
-            const response: any = await youtube.videos.list({
-                key: YOUTUBE_API_KEY,
-                part: ['snippet', 'statistics', 'contentDetails', 'status'], // Added 'status'
-                chart: 'mostPopular',
-                regionCode: options.regionCode,
-                maxResults: 50,
-                pageToken: pageToken // Pass the token!
-            });
+                const response: any = await youtube.videos.list({
+                    key: YOUTUBE_API_KEY,
+                    part: ['snippet', 'statistics', 'contentDetails', 'status'],
+                    chart: 'mostPopular',
+                    regionCode: options.regionCode,
+                    maxResults: 50,
+                    pageToken: pageToken
+                });
 
-            const items = response.data.items || [];
-            const pageShorts = items.filter((item: any) => {
-                const d = parseDuration(item.contentDetails?.duration || '');
-                return d > 0 && d <= 61;
-            });
+                const items = response.data.items || [];
+                const pageShorts = items.filter((item: any) => {
+                    const d = parseDuration(item.contentDetails?.duration || '');
+                    return d > 0 && d <= 61;
+                });
 
-            console.log(`[${options.regionCode}] Page ${i + 1}: Found ${pageShorts.length} shorts`);
-            shorts = [...shorts, ...pageShorts];
+                console.log(`[${options.regionCode}] Page ${i + 1}: Found ${pageShorts.length} shorts`);
+                shorts = [...shorts, ...pageShorts];
 
-            pageToken = response.data.nextPageToken || undefined;
-            if (!pageToken) break;
+                pageToken = response.data.nextPageToken || undefined;
+                if (!pageToken) break;
+            }
+            console.log(`[${options.regionCode}] Trends strategy found total: ${shorts.length}`);
         }
-        console.log(`[${options.regionCode}] Trends strategy found total: ${shorts.length}`);
 
-        // Strategy 2: Search Backfill
+        // Strategy 2: Search Backfill (or Primary if forceSearch is true)
         if (shorts.length < targetCount) {
             console.log(`[${options.regionCode}] Strategy 2: Searching keywords...`);
 
-            const queries = [
-                `${options.keywords.join('|')} #Shorts`,
-                '#Shorts'
-            ];
+            // If forceSearch is on, we might want to iterate keywords more aggressively
+            const queries = options.forceSearch
+                ? options.keywords.map(k => `${k} #Shorts`)
+                : [
+                    `${options.keywords.join('|')} #Shorts`,
+                    '#Shorts'
+                ];
 
             for (const query of queries) {
                 if (shorts.length >= targetCount) break;
@@ -118,7 +123,7 @@ export async function fetchTrendingShorts(options: FetchOptions, targetCount = 2
                 if (videoIds.length > 0) {
                     const details = await youtube.videos.list({
                         key: YOUTUBE_API_KEY,
-                        part: ['snippet', 'statistics', 'contentDetails', 'status'], // Added 'status'
+                        part: ['snippet', 'statistics', 'contentDetails', 'status'],
                         id: videoIds
                     });
 
@@ -145,7 +150,6 @@ export async function fetchTrendingShorts(options: FetchOptions, targetCount = 2
         const uniqueMap = new Map();
         shorts.forEach(s => {
             if (!uniqueMap.has(s.id)) {
-                // Attach our computed is_kids flag to the object for easy access later
                 s.is_kids_computed = isKidsContent(s);
                 uniqueMap.set(s.id, s);
             }

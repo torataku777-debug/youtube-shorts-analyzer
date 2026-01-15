@@ -156,7 +156,8 @@ export async function runIngestProcess() {
             const deepVideos = await fetchTrendingShorts({
                 regionCode: region.code,
                 relevanceLanguage: region.lang,
-                keywords: [k.keyword] // Recursively search for this new keyword
+                keywords: [k.keyword], // Recursively search for this new keyword
+                forceSearch: true
             }, 10); // Fetch a small batch per keyword
 
             const deepSaved = await saveToDatabase(deepVideos, region.code);
