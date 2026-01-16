@@ -96,8 +96,8 @@ async function saveToDatabase(videoStats: any[], regionCode: string) {
 }
 
 export async function runIngestProcess() {
-    console.log('Starting Multi-Region Deep Ingest...');
-    const TARGET_COUNT = 200;
+    console.log('Starting Multi-Region Deep Ingest (Optimized for Vercel Hobby)...');
+    const TARGET_COUNT = 50; // Reduced from 200 to 50 for 10s timeout limit
 
     const regions = [
         {
@@ -115,7 +115,7 @@ export async function runIngestProcess() {
     let totalVideos = 0;
 
     for (const region of regions) {
-        console.log(`Processing Region: ${region.code} with target ${TARGET_COUNT}`);
+        console.log(`[${region.code}] Processing Region... Target: ${TARGET_COUNT}`);
 
         // 1. Initial Ingest (Trends + Manual Keywords)
         const initialVideos = await fetchTrendingShorts({
@@ -124,44 +124,52 @@ export async function runIngestProcess() {
             keywords: region.keywords
         }, TARGET_COUNT);
 
+        console.log(`[${region.code}] 1. Initial Fetch: Retrieved ${initialVideos.length} videos from API`);
+
         const savedCount = await saveToDatabase(initialVideos, region.code);
+        console.log(`[${region.code}] 1. DB Save: Saved/Updated ${savedCount} videos`);
         totalVideos += savedCount;
 
         // 2. Keyword Extraction
-        const videosForExtraction = initialVideos.map((v: any) => ({
-            title: v.snippet.title,
-            description: v.snippet.description
-        }));
-        const extractedKeywords = extractTrendingKeywords(videosForExtraction);
+        // Only proceed if we have enough time/videos
+        if (initialVideos.length > 0) {
+            const videosForExtraction = initialVideos.map((v: any) => ({
+                title: v.snippet.title,
+                description: v.snippet.description
+            }));
+            const extractedKeywords = extractTrendingKeywords(videosForExtraction);
 
-        // Save keywords to DB
-        const keywordsToUpsert = extractedKeywords.slice(0, 20).map(k => ({
-            keyword: k.keyword,
-            region: region.code,
-            frequency: k.count
-        }));
+            // Save keywords to DB
+            const keywordsToUpsert = extractedKeywords.slice(0, 20).map(k => ({
+                keyword: k.keyword,
+                region: region.code,
+                frequency: k.count
+            }));
 
-        if (keywordsToUpsert.length > 0) {
-            await supabase
-                .from('trending_keywords')
-                .upsert(keywordsToUpsert, { onConflict: 'keyword,region' });
-        }
+            if (keywordsToUpsert.length > 0) {
+                await supabase
+                    .from('trending_keywords')
+                    .upsert(keywordsToUpsert, { onConflict: 'keyword,region' });
+                console.log(`[${region.code}] 2. Keywords: Upserted ${keywordsToUpsert.length} trending keywords`);
+            }
 
-        // 3. Deep Search (Top 5 Keywords)
-        console.log(`[${region.code}] Starting Deep Search on top keywords...`);
-        const topKeywords = extractedKeywords.slice(0, 5); // Take top 5
+            // 3. Deep Search (Top 3 Keywords only to save time)
+            console.log(`[${region.code}] 3. Deep Search: Starting on top keywords...`);
+            const topKeywords = extractedKeywords.slice(0, 3); // Reduced from 5 to 3
 
-        for (const k of topKeywords) {
-            console.log(`[${region.code}] Deep Search: ${k.keyword}`);
-            const deepVideos = await fetchTrendingShorts({
-                regionCode: region.code,
-                relevanceLanguage: region.lang,
-                keywords: [k.keyword], // Recursively search for this new keyword
-                forceSearch: true
-            }, 10); // Fetch a small batch per keyword
+            for (const k of topKeywords) {
+                console.log(`[${region.code}] Deep Search: Searching for "${k.keyword}"`);
+                const deepVideos = await fetchTrendingShorts({
+                    regionCode: region.code,
+                    relevanceLanguage: region.lang,
+                    keywords: [k.keyword], // Recursively search for this new keyword
+                    forceSearch: true
+                }, 5); // Reduced from 10 to 5 per keyword
 
-            const deepSaved = await saveToDatabase(deepVideos, region.code);
-            totalVideos += deepSaved;
+                console.log(`[${region.code}] Deep Search "${k.keyword}": Retrieved ${deepVideos.length} videos`);
+                const deepSaved = await saveToDatabase(deepVideos, region.code);
+                totalVideos += deepSaved;
+            }
         }
     }
 
