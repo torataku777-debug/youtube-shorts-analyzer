@@ -167,10 +167,17 @@ export async function fetchTrendingShorts(options: FetchOptions & { forceSearch?
 
 export async function fetchChannelStats(channelIds: string[]) {
     try {
+        // 1. Filter out empty/null/undefined IDs and potential duplicates
+        const uniqueIds = [...new Set(channelIds.filter(id => id && id.trim() !== ''))];
+
+        if (uniqueIds.length === 0) {
+            return [];
+        }
+
         const response = await youtube.channels.list({
             key: YOUTUBE_API_KEY,
             part: ['snippet', 'statistics'],
-            id: channelIds,
+            id: uniqueIds, // The Google client handles array joining automatically
         });
         return response.data.items || [];
     } catch (error) {
