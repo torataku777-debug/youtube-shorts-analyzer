@@ -167,21 +167,52 @@ export async function fetchTrendingShorts(options: FetchOptions & { forceSearch?
 
 export async function fetchChannelStats(channelIds: string[]) {
     try {
-        // 1. Filter out empty/null/undefined IDs and potential duplicates
-        const uniqueIds = [...new Set(channelIds.filter(id => id && id.trim() !== ''))];
+        // 1. Strict Cleaning & Uniquing
+        // .trim() each ID and filter out empty strings/falsy values
+        const uniqueIds = [...new Set(
+            channelIds
+                .map(id => id?.trim())
+                .filter((id): id is string => Boolean(id) && id.length > 0)
+        )];
 
         if (uniqueIds.length === 0) {
+            console.log('fetchChannelStats: No valid IDs found after cleaning.');
             return [];
         }
 
-        const response = await youtube.channels.list({
-            key: YOUTUBE_API_KEY,
-            part: ['snippet', 'statistics'],
-            id: uniqueIds, // The Google client handles array joining automatically
-        });
-        return response.data.items || [];
-    } catch (error) {
-        console.error('Error fetching channel stats:', error);
+        console.log(`fetchChannelStats: Fetching stats for ${uniqueIds.length} channels.`);
+
+        // 2. Chunking (max 50 per request)
+        const CHUNK_SIZE = 50;
+        let allItems: any[] = [];
+
+        for (let i = 0; i < uniqueIds.length; i += CHUNK_SIZE) {
+            const chunk = uniqueIds.slice(i, i + CHUNK_SIZE);
+
+            const params = {
+                key: YOUTUBE_API_KEY,
+                part: ['snippet', 'statistics'],
+                id: chunk, // Pass array, client handles join
+            };
+
+            // 3. Debug Logging
+            console.log(`fetchChannelStats [Chunk ${Math.floor(i / CHUNK_SIZE) + 1}]: Fetching ${chunk.length} IDs`);
+            // Explicitly log the exact params object to catch any "invalid filter" issues
+            console.log('API Params:', JSON.stringify({ ...params, key: 'HIDDEN' }));
+
+            const response = await youtube.channels.list(params);
+
+            if (response.data.items) {
+                allItems = [...allItems, ...response.data.items];
+            }
+        }
+
+        return allItems;
+
+    } catch (error: any) {
+        console.error('Error fetching channel stats:',
+            error.response?.data?.error || error.message || error
+        );
         return [];
     }
 }
