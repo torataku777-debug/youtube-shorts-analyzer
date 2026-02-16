@@ -31,6 +31,7 @@ export interface Video {
     is_faceless: boolean;
     is_kids: boolean;
     audio_info?: string;
+    region: string; // Add region to interface
 }
 
 export interface TrendGenre {
@@ -58,10 +59,70 @@ if (!fs.existsSync(VIDEOS_FILE)) fs.writeFileSync(VIDEOS_FILE, '[]');
 const isSupabaseAvailable = () => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Check if key is valid (JWT format)
     return url && key && key.startsWith('eyJ');
 };
 
 export const dataProvider = {
+    async getTrendingShorts(params: {
+        period_hours: number;
+        target_region: string;
+        hide_kids: boolean;
+    }): Promise<any[]> {
+        if (isSupabaseAvailable()) {
+            console.log('Using Supabase for Trending Shorts');
+            const { data, error } = await supabase.rpc('get_trending_shorts', params);
+            if (error) throw error;
+            return data || [];
+        } else {
+            console.log('Using Local JSON for Trending Shorts');
+            // Ensure files exist
+            if (!fs.existsSync(VIDEOS_FILE) || !fs.existsSync(CHANNELS_FILE)) return [];
+
+            const videos: Video[] = JSON.parse(fs.readFileSync(VIDEOS_FILE, 'utf-8'));
+            const channels: Channel[] = JSON.parse(fs.readFileSync(CHANNELS_FILE, 'utf-8'));
+            const channelMap = new Map(channels.map(c => [c.id, c]));
+
+            // Filter
+            let filtered = videos.filter(v => {
+                if (v.region !== params.target_region) return false;
+                if (params.hide_kids && v.is_kids) return false;
+
+                // Period filter: published within last X hours
+                // Note: Real trending logic uses view velocity, but here we just use recency for fallback
+                const pubDate = new Date(v.published_at);
+                const cutoff = new Date(Date.now() - params.period_hours * 60 * 60 * 1000);
+                return pubDate >= cutoff;
+            });
+
+            // Sort by views (simple approximation of trending)
+            filtered.sort((a, b) => b.view_count - a.view_count);
+
+            // Limit to 50
+            filtered = filtered.slice(0, 50);
+
+            // Map to RPC response shape
+            return filtered.map(v => {
+                const channel = channelMap.get(v.channel_id);
+                return {
+                    video_id: v.id,
+                    video_youtube_id: v.youtube_id,
+                    title: v.title,
+                    thumbnail_url: v.thumbnail_url,
+                    channel_title: channel?.title || 'Unknown',
+                    channel_youtube_id: channel?.youtube_id || '',
+                    current_views: v.view_count, // Fallback: use total views as current views
+                    growth_views: 0, // Cannot calculate without history
+                    growth_rate: 0, // Cannot calculate without history
+                    is_high_rpm: v.is_high_rpm,
+                    is_faceless: v.is_faceless,
+                    audio_info: v.audio_info,
+                    is_kids: v.is_kids
+                };
+            });
+        }
+    },
+
     async getRisingStars(params: {
         region_code: string;
         max_video_count: number;
@@ -125,14 +186,13 @@ export const dataProvider = {
             return;
         }
 
-        // Local Save
         const current: Video[] = JSON.parse(fs.readFileSync(VIDEOS_FILE, 'utf-8'));
         const map = new Map(current.map(v => [v.youtube_id, v]));
 
         videos.forEach(v => {
             const existing = map.get(v.youtube_id);
+            // Use existing ID if available, else new random UUID
             const id = existing?.id || crypto.randomUUID();
-            // Map DB styling to local interface if needed, but for now assuming direct mapping
             map.set(v.youtube_id, { ...v, id });
         });
 
