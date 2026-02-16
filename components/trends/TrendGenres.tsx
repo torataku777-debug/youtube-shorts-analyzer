@@ -3,8 +3,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import { getTrendGenres, TrendGenre } from "@/lib/genre-analysis";
-import { Sparkles, TrendingUp } from "lucide-react";
+import { fetchTrendGenresAction } from '@/app/actions';
+import { TrendGenre } from '@/lib/data-provider';
+import { Sparkles } from "lucide-react";
 
 export function TrendGenres() {
     const [jpGenres, setJpGenres] = useState<TrendGenre[]>([]);
@@ -12,8 +13,8 @@ export function TrendGenres() {
 
     useEffect(() => {
         const fetchGenres = async () => {
-            const jp = await getTrendGenres('JP');
-            const us = await getTrendGenres('US');
+            const jp = await fetchTrendGenresAction('JP');
+            const us = await fetchTrendGenresAction('US');
             setJpGenres(jp);
             setUsGenres(us);
         };

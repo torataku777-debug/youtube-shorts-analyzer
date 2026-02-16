@@ -2,7 +2,8 @@
 // Force update
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+// Import Server Action
+import { fetchRisingStarsAction } from '@/app/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -55,40 +56,42 @@ export default function RisingStarsSection() {
         const fetchRisingStars = async () => {
             setLoading(true);
             try {
-                const { data: jpData, error: jpError } = await supabase
-                    .rpc('get_rising_stars', {
+                // Fetch JP
+                try {
+                    const jpData = await fetchRisingStarsAction({
                         region_code: 'JP',
                         max_video_count: parseInt(maxVideoCount),
                         min_avg_views: parseInt(minAvgViews),
                         max_months_since_creation: parseInt(maxMonths)
                     });
 
-                if (jpError) console.error("Error fetching JP stars:", jpError);
-                else {
-                    let filtered = jpData || [];
+                    let filteredJP = jpData || [];
                     if (selectedKeyword) {
                         const k = selectedKeyword.toLowerCase();
-                        filtered = filtered.filter((c: Channel) => c.title.toLowerCase().includes(k) || (c.custom_url && c.custom_url.toLowerCase().includes(k)));
+                        filteredJP = filteredJP.filter((c: Channel) => c.title.toLowerCase().includes(k) || (c.custom_url && c.custom_url.toLowerCase().includes(k)));
                     }
-                    setChannelsJP(filtered);
+                    setChannelsJP(filteredJP);
+                } catch (e) {
+                    console.error("Error fetching JP stars:", e);
                 }
 
-                const { data: usData, error: usError } = await supabase
-                    .rpc('get_rising_stars', {
+                // Fetch US
+                try {
+                    const usData = await fetchRisingStarsAction({
                         region_code: 'US',
                         max_video_count: parseInt(maxVideoCount),
                         min_avg_views: parseInt(minAvgViews),
                         max_months_since_creation: parseInt(maxMonths)
                     });
 
-                if (usError) console.error("Error fetching US stars:", usError);
-                else {
-                    let filtered = usData || [];
+                    let filteredUS = usData || [];
                     if (selectedKeyword) {
                         const k = selectedKeyword.toLowerCase();
-                        filtered = filtered.filter((c: Channel) => c.title.toLowerCase().includes(k) || (c.custom_url && c.custom_url.toLowerCase().includes(k)));
+                        filteredUS = filteredUS.filter((c: Channel) => c.title.toLowerCase().includes(k) || (c.custom_url && c.custom_url.toLowerCase().includes(k)));
                     }
-                    setChannelsUS(filtered);
+                    setChannelsUS(filteredUS);
+                } catch (e) {
+                    console.error("Error fetching US stars:", e);
                 }
 
             } catch (err) {

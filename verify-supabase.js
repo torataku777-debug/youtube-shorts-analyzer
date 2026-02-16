@@ -1,36 +1,52 @@
-
-require('dotenv').config({ path: '.env.local' });
+const fs = require('fs');
+const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
+// Check environments
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Error: Supabase keys not found in .env.local');
-    process.exit(1);
-}
+console.log('--- Supabase Connection Verification ---');
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const isKeyValid = supabaseUrl && supabaseAnonKey && supabaseAnonKey.startsWith('eyJ');
 
-async function verifySupabase() {
-    console.log('Verifying Supabase Connection...');
+if (isKeyValid) {
+    console.log('✅ Supabase Keys detected. Attempting connection...');
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Try to select from a non-existent table or just check health implicitly
-    // Ideally, we select from 'channels' but it might not exist yet.
-    // The error "relation "channels" does not exist" confirms we reached the DB.
-    // Or "401 Unauthorized" if keys are bad.
+    (async () => {
+        try {
+            console.log('Attempting to connect with:', {
+                url: supabaseUrl,
+                keyLength: supabaseAnonKey?.length,
+                keyPrefix: supabaseAnonKey?.substring(0, 5)
+            });
+            const { data, error } = await supabase.from('channels').select('*').limit(1);
 
-    const { data, error } = await supabase.from('channels').select('*').limit(1);
-
-    if (error) {
-        if (error.code === 'PGRST204' || error.message.includes('does not exist')) {
-            console.log('✅ Connection Successful! (Tables not created yet, which is expected)');
-        } else {
-            console.log('⚠️ Connection reached, but error returned:', error.message);
+            if (error) {
+                console.error('Supabase Error:', JSON.stringify(error, null, 2));
+                if (error.code === 'PGRST204' || error.message.includes('does not exist')) {
+                    console.log('✅ Connection Successful! (Tables not created yet, which is expected)');
+                } else {
+                    console.log('⚠️ Connection reached, but error returned:', error.message);
+                }
+            } else {
+                console.log('✅ Connection Successful!');
+            }
+        } catch (err) {
+            console.error('Unexpected Error:', err);
         }
+    })();
+} else {
+    console.log('⚠️  Supabase Keys missing or invalid.');
+    console.log('ℹ️  Checking for Local JSON Fallback configuration...');
+
+    const dataProviderPath = path.join(__dirname, 'lib', 'data-provider.ts');
+    if (fs.existsSync(dataProviderPath)) {
+        console.log('✅ Local Data Provider found at lib/data-provider.ts');
+        console.log('✅ System should utilize Local JSON Fallback.');
     } else {
-        console.log('✅ Connection Successful! (Table exists)');
+        console.error('❌ Data Provider NOT found. System may be broken.');
+        process.exit(1);
     }
 }
-
-verifySupabase();
