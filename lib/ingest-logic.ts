@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { fetchTrendingShorts, fetchChannelStats } from '@/lib/youtube-server';
 import { extractTrendingKeywords } from '@/lib/keyword-extractor';
+import { dataProvider } from '@/lib/data-provider';
 
 // Helper to save channels and videos to DB (reusable for both main ingest and deep ingest)
 // Helper to save channels and videos to DB (reusable for both main ingest and deep ingest)
@@ -26,7 +27,6 @@ async function saveToDatabase(videoStats: any[], regionCode: string) {
 
     // await supabase.from('channels').upsert(channelsData, { onConflict: 'youtube_id' });
     // REPLACED WITH PROVIDER
-    const { dataProvider } = await import('@/lib/data-provider');
     await dataProvider.saveChannels(channelsData);
 
     // Upsert Videos
@@ -78,18 +78,33 @@ async function saveToDatabase(videoStats: any[], regionCode: string) {
         };
     }).filter(v => v.channel_id); // Only save if we found the parent channel
 
-    // const { data: storedVideos, error: videoError } = await supabase
-    //     .from('videos')
-    //     .upsert(videosData, { onConflict: 'youtube_id' })
-    //     .select();
-
+    // await supabase.from('videos').upsert(videosData, { onConflict: 'youtube_id' }).select();
     // if (videoError) console.error(videoError);
     // REPLACED WITH PROVIDER
     await dataProvider.saveVideos(videosData);
 
-    // Metrics (Skip for JSON fallback for now to keep it simple, or implement if needed)
-    // If using Supabase, we might want to keep the original logic, but for now let's simplify.
-    // The provider handles basics.
+    // Metrics: 各動画のdaily_metricsを保存する
+    // 動画のYouTube統計（再生数・いいね数・コメント数）を保存
+    const channelMapForMetrics = await dataProvider.getChannelMap(channelIds);
+    const metricsData = videoStats.map((v: any) => {
+        const channelId = channelMapForMetrics.get(v.snippet.channelId);
+        if (!channelId) return null;
+        // channelsテーブルのidは内部UUIDだが、videosテーブルからvideo_idを引いてくる必要がある
+        // ただしここでは定数時間内のplanningとして、youtube_idと統計を渡すので、
+        // data-provider.ts側でvideosテーブルからidをlookupする最初に必要な情報をそろえる
+        return {
+            youtube_id: v.id,
+            video_id: '', // data-provider.saveMetrics内でyoutube_idからlookupされる
+            view_count: parseInt(v.statistics?.viewCount || '0'),
+            like_count: parseInt(v.statistics?.likeCount || '0'),
+            comment_count: parseInt(v.statistics?.commentCount || '0'),
+        };
+    }).filter(Boolean) as Array<{ youtube_id: string; video_id: string; view_count: number; like_count: number; comment_count: number }>;
+
+    if (metricsData.length > 0) {
+        await dataProvider.saveMetrics(metricsData);
+        console.log(`[${regionCode}] daily_metricsを保存: ${metricsData.length}件`);
+    }
 
     return videosData.length;
 }
@@ -146,9 +161,8 @@ export async function runIngestProcess() {
             }));
 
             if (keywordsToUpsert.length > 0) {
-                await supabase
-                    .from('trending_keywords')
-                    .upsert(keywordsToUpsert, { onConflict: 'keyword,region' });
+                // REPLACED WITH PROVIDER (instead of supabase direct call)
+                await dataProvider.saveKeywords(keywordsToUpsert.map(k => ({ keyword: k.keyword, region: k.region, frequency: k.frequency })));
                 console.log(`[${region.code}] 2. Keywords: Upserted ${keywordsToUpsert.length} trending keywords`);
             }
 
@@ -172,14 +186,9 @@ export async function runIngestProcess() {
         }
     }
 
-    // 4. Cleanup: Delete videos older than 7 days to keep DB healthy and relevance strict
+    // 4. Cleanup: 古いビデオを削除 (7日以上古いもの)
     console.log('Cleaning up old videos...');
-    const { error: cleanupError } = await supabase
-        .from('videos')
-        .delete()
-        .lt('published_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-
-    if (cleanupError) console.error('Cleanup Error:', cleanupError);
+    await dataProvider.deleteOldVideos();
 
     return { success: true, totalProcessed: totalVideos };
 }

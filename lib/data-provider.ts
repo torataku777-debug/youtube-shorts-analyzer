@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase';
 import fs from 'fs';
 import path from 'path';
 
+const DATA_KEYWORDS_FILE = () => path.join(process.cwd(), 'data', 'keywords.json');
+
 // Types
 export interface Channel {
     id: string;
@@ -59,8 +61,9 @@ if (!fs.existsSync(VIDEOS_FILE)) fs.writeFileSync(VIDEOS_FILE, '[]');
 const isSupabaseAvailable = () => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    // Check if key is valid (JWT format)
-    return url && key && key.startsWith('eyJ');
+    // Check if key is valid: JWT形式(eyJ)または新しいsupabase形式(sb_)に対応
+    // URLとKeyの両方が存在し、空でないことを確認
+    return !!url && !!key && key.length > 20;
 };
 
 export const dataProvider = {
@@ -87,12 +90,7 @@ export const dataProvider = {
             let filtered = videos.filter(v => {
                 if (v.region !== params.target_region) return false;
                 if (params.hide_kids && v.is_kids) return false;
-
-                // Period filter: published within last X hours
-                // Note: Real trending logic uses view velocity, but here we just use recency for fallback
-                const pubDate = new Date(v.published_at);
-                const cutoff = new Date(Date.now() - params.period_hours * 60 * 60 * 1000);
-                return pubDate >= cutoff;
+                return true; // ローカルJSONではperiodフィルタは緩和（実データはSupabaseから取得するため）
             });
 
             // Sort by views (simple approximation of trending)
@@ -214,5 +212,101 @@ export const dataProvider = {
             }
         });
         return map;
+    },
+
+    // daily_metricsを保存する (Supabase時: daily_metricsテーブル / ローカル時: videos.jsonのview_count等を更新)
+    async saveMetrics(metricsData: Array<{ video_id: string; view_count: number; like_count: number; comment_count: number; youtube_id: string }>) {
+        if (isSupabaseAvailable()) {
+            // まずyoutube_idからvideo_id(UUID)をlookup
+            const youtubeIds = metricsData.map(m => m.youtube_id).filter(Boolean);
+            const { data: videoRows } = await supabase
+                .from('videos')
+                .select('id, youtube_id')
+                .in('youtube_id', youtubeIds);
+
+            if (!videoRows || videoRows.length === 0) {
+                console.log('saveMetrics: No matching videos found in Supabase.');
+                return;
+            }
+
+            const videoIdMap = new Map(videoRows.map((v: any) => [v.youtube_id, v.id]));
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
+
+            const rows = metricsData
+                .map(m => {
+                    const vid = videoIdMap.get(m.youtube_id);
+                    if (!vid) return null;
+                    return {
+                        video_id: vid,
+                        view_count: m.view_count,
+                        like_count: m.like_count,
+                        comment_count: m.comment_count,
+                        recorded_at: `${today}T00:00:00Z`
+                    };
+                })
+                .filter(Boolean);
+
+            if (rows.length > 0) {
+                const { error } = await supabase.from('daily_metrics').upsert(rows, { onConflict: 'video_id,recorded_at' });
+                if (error) console.error('Supabase daily_metrics Save Error:', error);
+            }
+            return;
+        }
+
+        // ローカルJSON: videos.jsonのview_count等を更新
+        const videoFile = path.join(process.cwd(), 'data', 'videos.json');
+        if (!fs.existsSync(videoFile)) return;
+        const current: Video[] = JSON.parse(fs.readFileSync(videoFile, 'utf-8'));
+        const metricsMap = new Map(metricsData.map(m => [m.youtube_id, m]));
+        const updated = current.map(v => {
+            const metrics = metricsMap.get(v.youtube_id);
+            if (metrics) {
+                return { ...v, view_count: metrics.view_count, like_count: metrics.like_count, comment_count: metrics.comment_count };
+            }
+            return v;
+        });
+        fs.writeFileSync(videoFile, JSON.stringify(updated, null, 2));
+    },
+
+    // trending_keywordsを保存する
+    async saveKeywords(keywords: Array<{ keyword: string; region: string; frequency: number }>) {
+        if (isSupabaseAvailable()) {
+            const { error } = await supabase
+                .from('trending_keywords')
+                .upsert(keywords.map(k => ({ keyword: k.keyword, region: k.region, frequency: k.frequency })), { onConflict: 'keyword,region' });
+            if (error) console.error('Supabase Keywords Save Error:', error);
+            return;
+        }
+
+        // ローカルJSON: data/keywords.jsonに保存
+        const kFile = DATA_KEYWORDS_FILE();
+        let current: any[] = [];
+        if (fs.existsSync(kFile)) {
+            current = JSON.parse(fs.readFileSync(kFile, 'utf-8'));
+        }
+        const kMap = new Map(current.map((k: any) => [`${k.keyword}_${k.region}`, k]));
+        keywords.forEach(k => kMap.set(`${k.keyword}_${k.region}`, k));
+        fs.writeFileSync(kFile, JSON.stringify(Array.from(kMap.values()), null, 2));
+    },
+
+    // videoを削除する (7日以上古いもの)
+    async deleteOldVideos() {
+        if (isSupabaseAvailable()) {
+            const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            const { error } = await supabase
+                .from('videos')
+                .delete()
+                .lt('published_at', cutoff);
+            if (error) console.error('Supabase Cleanup Error:', error);
+            return;
+        }
+        // ローカルJSON: data/videos.jsonから古いビデオを削除
+        const videoFile = path.join(process.cwd(), 'data', 'videos.json');
+        if (!fs.existsSync(videoFile)) return;
+        const current: Video[] = JSON.parse(fs.readFileSync(videoFile, 'utf-8'));
+        const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const filtered = current.filter(v => new Date(v.published_at) >= cutoff);
+        fs.writeFileSync(videoFile, JSON.stringify(filtered, null, 2));
+        console.log(`Cleanup: Removed ${current.length - filtered.length} old videos from local JSON.`);
     }
 };

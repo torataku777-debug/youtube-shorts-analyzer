@@ -8,3 +8,6 @@
 [00:04:46.556] Server  LOG     ✓ Compiled in 9ms
 [00:05:05.246] Server  LOG     Fetching trending shorts for period: 24h, region: JP, hide_kids: false
 [00:05:05.246] Server  LOG     Using Local JSON for Trending Shorts
+[00:05:55.952] Server  LOG     Fetching trending shorts for period: 24h, region: JP, hide_kids: false
+[00:05:55.953] Server  LOG     Using Local JSON for Trending Shorts
+[00:05:56.053] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
