@@ -96,8 +96,8 @@ export const dataProvider = {
             // Sort by views (simple approximation of trending)
             filtered.sort((a, b) => b.view_count - a.view_count);
 
-            // Limit to 50
-            filtered = filtered.slice(0, 50);
+            // Limit to 100
+            filtered = filtered.slice(0, 100);
 
             // Map to RPC response shape
             return filtered.map(v => {

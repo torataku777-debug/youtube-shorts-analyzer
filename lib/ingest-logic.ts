@@ -111,7 +111,7 @@ async function saveToDatabase(videoStats: any[], regionCode: string) {
 
 export async function runIngestProcess() {
     console.log('Starting Multi-Region Deep Ingest (Optimized for Vercel Hobby)...');
-    const TARGET_COUNT = 50; // Reduced from 200 to 50 for 10s timeout limit
+    const TARGET_COUNT = 100; // JP/US 各100件取得
 
     const regions = [
         {
@@ -168,7 +168,7 @@ export async function runIngestProcess() {
 
             // 3. Deep Search (Top 3 Keywords only to save time)
             console.log(`[${region.code}] 3. Deep Search: Starting on top keywords...`);
-            const topKeywords = extractedKeywords.slice(0, 3); // Reduced from 5 to 3
+            const topKeywords = extractedKeywords.slice(0, 5); // Top 5キーワードでDeep Search
 
             for (const k of topKeywords) {
                 console.log(`[${region.code}] Deep Search: Searching for "${k.keyword}"`);
@@ -177,7 +177,7 @@ export async function runIngestProcess() {
                     relevanceLanguage: region.lang,
                     keywords: [k.keyword], // Recursively search for this new keyword
                     forceSearch: true
-                }, 5); // Reduced from 10 to 5 per keyword
+                }, 10); // キーワードごとに10件取得
 
                 console.log(`[${region.code}] Deep Search "${k.keyword}": Retrieved ${deepVideos.length} videos`);
                 const deepSaved = await saveToDatabase(deepVideos, region.code);
