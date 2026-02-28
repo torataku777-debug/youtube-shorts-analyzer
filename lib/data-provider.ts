@@ -112,9 +112,9 @@ export const dataProvider = {
                     current_views: v.view_count, // Fallback: use total views as current views
                     growth_views: 0, // Cannot calculate without history
                     growth_rate: 0, // Cannot calculate without history
-                    is_high_rpm: v.is_high_rpm,
-                    is_faceless: v.is_faceless,
-                    audio_info: v.audio_info,
+                    is_high_rpm: (v as any).is_high_rpm || false,
+                    is_faceless: (v as any).is_faceless || false,
+                    audio_info: (v as any).audio_info || null,
                     is_kids: v.is_kids
                 };
             });

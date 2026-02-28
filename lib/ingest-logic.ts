@@ -74,7 +74,11 @@ async function saveToDatabase(videoStats: any[], regionCode: string) {
             is_kids: v.is_kids_computed,
             is_high_rpm: isHighRpm,
             is_faceless: isFaceless,
-            audio_info: audioInfo
+            audio_info: audioInfo,
+            // 再生数等もvideos テーブルに直接保存 (daily_metricsがなくても表示できるように)
+            view_count: parseInt(v.statistics?.viewCount || '0'),
+            like_count: parseInt(v.statistics?.likeCount || '0'),
+            comment_count: parseInt(v.statistics?.commentCount || '0'),
         };
     }).filter(v => v.channel_id); // Only save if we found the parent channel
 
