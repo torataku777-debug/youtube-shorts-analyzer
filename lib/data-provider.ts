@@ -293,14 +293,15 @@ export const dataProvider = {
         fs.writeFileSync(kFile, JSON.stringify(Array.from(kMap.values()), null, 2));
     },
 
-    // videoを削除する (7日以上古いもの)
+    // videoを削除する (DB登録日から7日以上経過したもの)
     async deleteOldVideos() {
         if (isSupabaseAvailable()) {
             const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
             const { error } = await supabase
                 .from('videos')
                 .delete()
-                .lt('published_at', cutoff);
+                // created_at基準で削除（published_atはYouTube投稿日なので使いない）
+                .lt('created_at', cutoff);
             if (error) console.error('Supabase Cleanup Error:', error);
             return;
         }
