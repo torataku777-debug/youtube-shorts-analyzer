@@ -157,7 +157,9 @@ export const dataProvider = {
 
     async saveChannels(channels: Channel[]) {
         if (isSupabaseAvailable()) {
-            const { error } = await supabase.from('channels').upsert(channels, { onConflict: 'youtube_id' });
+            // idを除外してupsert（Supabaseがidを自動生成・既存時はidを変更しない）
+            const channelsWithoutId = channels.map(({ id: _id, ...rest }) => rest);
+            const { error } = await supabase.from('channels').upsert(channelsWithoutId, { onConflict: 'youtube_id' });
             if (error) console.error('Supabase Save Error:', error);
             return;
         }
@@ -179,7 +181,9 @@ export const dataProvider = {
 
     async saveVideos(videos: any[]) { // accepting raw video objects meant for DB
         if (isSupabaseAvailable()) {
-            const { error } = await supabase.from('videos').upsert(videos, { onConflict: 'youtube_id' });
+            // idを除外してupsert（Supabaseがidを自動生成・既存時はidを変更しない）
+            const videosWithoutId = videos.map(({ id: _id, ...rest }) => rest);
+            const { error } = await supabase.from('videos').upsert(videosWithoutId, { onConflict: 'youtube_id' });
             if (error) console.error('Supabase Save Video Error:', error);
             return;
         }
