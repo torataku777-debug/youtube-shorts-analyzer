@@ -170,9 +170,9 @@ export async function runIngestProcess() {
                 console.log(`[${region.code}] 2. Keywords: Upserted ${keywordsToUpsert.length} trending keywords`);
             }
 
-            // 3. Deep Search (Top 3 Keywords only to save time)
+            // 3. Deep Search (Top 2 Keywords only to stay within timeout)
             console.log(`[${region.code}] 3. Deep Search: Starting on top keywords...`);
-            const topKeywords = extractedKeywords.slice(0, 5); // Top 5キーワードでDeep Search
+            const topKeywords = extractedKeywords.slice(0, 2); // Top 2キーワードでDeep Search（タイムアウト対策）
 
             for (const k of topKeywords) {
                 console.log(`[${region.code}] Deep Search: Searching for "${k.keyword}"`);
@@ -181,7 +181,7 @@ export async function runIngestProcess() {
                     relevanceLanguage: region.lang,
                     keywords: [k.keyword], // Recursively search for this new keyword
                     forceSearch: true
-                }, 10); // キーワードごとに10件取得
+                }, 20); // キーワードごとに20件取得
 
                 console.log(`[${region.code}] Deep Search "${k.keyword}": Retrieved ${deepVideos.length} videos`);
                 const deepSaved = await saveToDatabase(deepVideos, region.code);

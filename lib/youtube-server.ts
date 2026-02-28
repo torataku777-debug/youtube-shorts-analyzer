@@ -63,7 +63,7 @@ export async function fetchTrendingShorts(options: FetchOptions & { forceSearch?
             console.log(`[${options.regionCode}] Strategy 1: Scanning Most Popular...`);
             let pageToken: string | undefined = undefined;
 
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 20; i++) {
                 if (shorts.length >= targetCount) break;
 
                 const response: any = await youtube.videos.list({
@@ -78,7 +78,8 @@ export async function fetchTrendingShorts(options: FetchOptions & { forceSearch?
                 const items = response.data.items || [];
                 const pageShorts = items.filter((item: any) => {
                     const d = parseDuration(item.contentDetails?.duration || '');
-                    return d > 0 && d <= 61;
+                    // Shorts: 65秒以下（エンコード誤差を考慮して65秒まで許容）
+                    return d > 0 && d <= 65;
                 });
 
                 console.log(`[${options.regionCode}] Page ${i + 1}: Found ${pageShorts.length} shorts`);
@@ -130,14 +131,9 @@ export async function fetchTrendingShorts(options: FetchOptions & { forceSearch?
                     const items = details.data.items || [];
                     const filtered = items.filter((item: any) => {
                         const d = parseDuration(item.contentDetails?.duration || '');
-                        if (d <= 0 || d > 61) return false;
-
-                        // Language Filter
-                        if (options.regionCode === 'JP') {
-                            const hasJP = containsJapanese(item.snippet?.title || '') || containsJapanese(item.snippet?.description || '');
-                            if (!hasJP) return false;
-                        }
-
+                        // Shorts: 65秒以下（エンコード誤差を考慮して65秒まで許容）
+                        if (d <= 0 || d > 65) return false;
+                        // 日本語フィルターを撤廃: JPリージョンAPIで取得したものはすべて対象
                         return true;
                     });
 
